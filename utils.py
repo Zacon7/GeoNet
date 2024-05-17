@@ -171,24 +171,29 @@ def compute_rigid_flow(depth, pose, intrinsics, reverse_pose=False):
     Rigid flow from target image to source image [batch, height_t, width_t, 2]
   """
   batch, height, width = depth.get_shape().as_list()
+
   # Convert pose vector to matrix
-  pose = pose_vec2mat(pose)
+  pose = pose_vec2mat(pose)           # [B, 4, 4]
   if reverse_pose:
     pose = tf.matrix_inverse(pose)
+
   # Construct pixel grid coordinates
-  pixel_coords = meshgrid(batch, height, width)
-  tgt_pixel_coords = tf.transpose(pixel_coords[:,:2,:,:], [0, 2, 3, 1])
+  pixel_coords = meshgrid(batch, height, width) # [B, 2, H, W]
+  tgt_pixel_coords = tf.transpose(pixel_coords[:,:2,:,:], [0, 2, 3, 1]) # [B, H, W, 2]
+
   # Convert pixel coordinates to the camera frame
-  cam_coords = pixel2cam(depth, pixel_coords, intrinsics)
+  cam_coords = pixel2cam(depth, pixel_coords, intrinsics)   # [B, 4, H, W]
+
   # Construct a 4x4 intrinsic matrix
   filler = tf.constant([0.0, 0.0, 0.0, 1.0], shape=[1, 1, 4])
   filler = tf.tile(filler, [batch, 1, 1])
   intrinsics = tf.concat([intrinsics, tf.zeros([batch, 3, 1])], axis=2)
-  intrinsics = tf.concat([intrinsics, filler], axis=1)
+  intrinsics = tf.concat([intrinsics, filler], axis=1)    # [B, 3, 3]
+
   # Get a 4x4 transformation matrix from 'target' camera frame to 'source'
   # pixel frame.
-  proj_tgt_cam_to_src_pixel = tf.matmul(intrinsics, pose)
-  src_pixel_coords = cam2pixel(cam_coords, proj_tgt_cam_to_src_pixel)
+  proj_tgt_cam_to_src_pixel = tf.matmul(intrinsics, pose) # [B, 4, 4]
+  src_pixel_coords = cam2pixel(cam_coords, proj_tgt_cam_to_src_pixel) # [B, H, W, 2]
   rigid_flow = src_pixel_coords - tgt_pixel_coords
   return rigid_flow
 

@@ -120,12 +120,12 @@ def build_resnet50(inputs, get_pred, is_training, var_scope):
                             normalizer_params=batch_norm_params,
                             weights_regularizer=slim.l2_regularizer(0.0001),
                             activation_fn=tf.nn.relu):
-            conv1 = conv(inputs, 64, 7, 2) # H/2  -   64D
+            conv1 = conv(inputs, 64, 7, 2) # H/2  -   64D        Conv1
             pool1 = maxpool(conv1,           3) # H/4  -   64D
-            conv2 = resblock(pool1,      64, 3) # H/8  -  256D
-            conv3 = resblock(conv2,     128, 4) # H/16 -  512D
-            conv4 = resblock(conv3,     256, 6) # H/32 - 1024D
-            conv5 = resblock(conv4,     512, 3) # H/64 - 2048D
+            conv2 = resblock(pool1,      64, 3) # H/8  -  256D   Layer1
+            conv3 = resblock(conv2,     128, 4) # H/16 -  512D   Layer2
+            conv4 = resblock(conv3,     256, 6) # H/32 - 1024D   Layer3
+            conv5 = resblock(conv4,     512, 3) # H/64 - 2048D   Layer4
 
             skip1 = conv1
             skip2 = pool1
